@@ -9,7 +9,7 @@ from urllib.request import urlopen
 import json
 
 
-perpperjam_api='248d610bc9497fe8c7cfa5247c1f337b96144f3baf408173eddb347ecc27a4a7'
+perpperjam_api='api'
 resource='publisher/creative/product'
 
 # retrieve all programID to find more products
@@ -48,6 +48,7 @@ print(url_getProduct[page])
 #product_data=json.loads(products_data_url[page].decode('utf-8'))
 #print(product_data)
 
+#create category
 """
 def add(product):
         product_name = product_data.get('name')
