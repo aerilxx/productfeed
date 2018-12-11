@@ -16,9 +16,9 @@ def getUserId():
     query=(" SELECT UserID from Users order by UserID")
     SID_list=[]
     try:
-        cnx = mysql.connector.connect(user='frenzylive', password='bhxJ6V1B',
-                              host='frenzystaging.cimjunfbcdxs.us-west-1.rds.amazonaws.com',
-                              database='ebdb')
+        cnx = mysql.connector.connect(user='username', password='password',
+                              host='staging on aws',
+                              database='dbname')
      
     except mysql.connector.Error as err:
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
@@ -37,7 +37,6 @@ def getUserId():
     cnx.close()
     
     return SID_list
-    print(SID_list)    
-    
-if __name__=="__main__":
-    getUserId()
+    #print(SID_list)    
+  
+
