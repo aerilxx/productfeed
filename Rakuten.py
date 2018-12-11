@@ -1,5 +1,4 @@
 # this is a program that generate dictionary from raw xml ==> xmllint
-# haven't studied it yet
 # parse the data and turn it into json string
 from lxml import etree as et
 import json
@@ -95,18 +94,6 @@ def product_processing(products, merch_id, merch_name):
         'type': 'add',
         'id':product_id,
         'fields':{
-            #'product_name':product_name,
-            #'brand': brand,
-            #'category':category,
-            #'product_link':product_link,
-            #'product_image':product_image,
-            #'price': price,
-            #'description_short': description_short,
-            #'description_long': description_long,
-            #'color': color,
-            #'material': material,
-            #'merch_id': merch_id,
-            #'merch_name':merch_name,
             'title': product_name,
             'brand': brand,
             'product_url': product_link,
@@ -147,16 +134,6 @@ def product_processing(products, merch_id, merch_name):
         i = i + 1
 
     return product_dict_list
-
-# take json str as input, turn it into bytes and upload it to cloudsearch
-# def upload_to_cloudsearch(products_json):
-#     # turn json to bytes
-#     products_bytes = products_json.encode('utf-8')
-#     # establish link and upload
-#     client = boto3.client('cloudsearchdomain',endpoint_url = 'http://doc-frenzysearch-g2cbqftgpmzftr7am5fvng5sz4.us-west-1.cloudsearch.amazonaws.com')
-#     response = client.upload_documents(
-#                 documents= products_bytes,
-#                 contentType='application/json')
 
 # function that popluate the product_queue
 # when the products it contains is less that 3500 records
@@ -209,10 +186,9 @@ def ftp_download():
 
     # connect to ftp
     ftp = FTP('aftp.linksynergy.com')
-    ftp.login('frenzylabs','V9P26CQ')
+    ftp.login('username','password')
     ftp_list = ftp.nlst()
 
-    # ftp_list = ['42030_3529748_mp_delta.xml.gz','42030_3529748_mp.xml.gz','41610_3529748_mp_delta.xml.gz','2311_3529748_mp.xml.gz','2311_3529748_mp_delta.xml.gz']
     file_list = create_file_list(ftp_list)
     for file_name in file_list:
         downloadfile(file_name)
@@ -226,19 +202,10 @@ def ftp_download():
 
 
 
-
-
-
-
-
 # start of the main function
 # file_list is a list of file name we will use in to following processing step
 
 # file_list = ftp_download()
-# print(file_list)
-
-# this is for testing purpose, just change the file_list
-file_list = ['13861_3529748_mp.xml']
 
 # this part go through the products in files, put them in a queue and
 # upload 4000 products a batch (since the cloudsearch has a limit upload filesize of 5MB per batch)
@@ -270,26 +237,3 @@ while len(file_queue) >= 0:
         populate_product_queue(file_queue)
 
 
-
-# chunk = products_chunks[0]
-# products_json = chunk_processing(chunk, merch_id, merch_name)
-# products_bytes = json_to_bytes(products_json)
-# print(sys.getsizeof(products_bytes))
-
-
-
-
-# first, use local file to test
-# use boto to upload the data
-# seperate the document to 5MB batches
-# combine small files to 5MB batches
-# integrate the download, unzip, delete file function
-
-# **********
-
-# start an instance on EC2, install all necessary python package and run the program on EC2
-
-# build API
-
-# client = boto3.client('cloudsearchdomain')
-# response = client.upload_documents(documents = b'${products_json}', contentType = 'application/json')
