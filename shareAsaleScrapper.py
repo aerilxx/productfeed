@@ -19,14 +19,14 @@ import csv
 import glob
 
 #mylocal path
-path='/Users/bingqingxie/Desktop/Desktop - Bingqing’s MacBook Air/source feed/'
+path='where you want to save the files'
 
 def ftp_shareasale_download():
     def downloadfile(file_name):
         ftp.retrbinary('RETR '+file_name, open(file_name,'wb').write)
     # connect to ftp
     ftp = FTP('datafeeds.shareasale.com')
-    ftp.login('frenzylabs','frenzy2018')
+    ftp.login('username','password')
     ftp_list = ftp.nlst()
     
     alist=[]
