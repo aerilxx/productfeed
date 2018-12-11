@@ -80,10 +80,7 @@ for files in os.listdir(path):
     if files.endswith('.txt'):
         filelist.append(files)
 
-
-#list=['54484.txt','43363.txt','40229.txt','48791.txt','80499.txt']
 csvlist=[]
-# problem file '66017.txt'
 for i in filelist:
     filepath=path+i
     with codecs.open(filepath, 'r' , encoding='utf-8', errors='ignore') as f:
@@ -92,10 +89,9 @@ for i in filelist:
         test.to_csv(path+i.replace(".txt",".csv"))
         csvlist.append(test)
 
-#test=['54484.csv','43363.csv','40229.csv','48791.csv','80499.csv']
 #convert to json
 
-for file in glob.glob('/Users/bingqingxie/Desktop/Desktop - Bingqing’s MacBook Air/source feed/*.csv'):
+for file in glob.glob('path/*.csv'):
     csvf=os.path.splitext(file)[0]
     jsonfile= csvf +'.json'
     
@@ -110,23 +106,3 @@ for file in glob.glob('/Users/bingqingxie/Desktop/Desktop - Bingqing’s MacBook
 filelist = [ f for f in os.listdir(path) if f.endswith(".csv") or f.endswith('.txt')]
 for f in filelist:
     os.remove(os.path.join(path, f))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
