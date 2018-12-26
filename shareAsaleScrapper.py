@@ -9,100 +9,124 @@ Created on Mon Nov 12 13:32:15 2018
 # scrap from shareASale
 
 from ftplib import FTP 
-import pandas as pd
-import numpy as np
 import errno
 import os
 import codecs
 import json
 import csv
-import glob
 
-#mylocal path
-path='where you want to save the files'
+#downloading
+def ftp_download():
+	def downloadfile(file_name):
+	    print("Downloading ", file_name)
+	    ftp.retrbinary('RETR '+file_name, open(file_name,'wb').write)
 
-def ftp_shareasale_download():
-    def downloadfile(file_name):
-        ftp.retrbinary('RETR '+file_name, open(file_name,'wb').write)
-    # connect to ftp
-    ftp = FTP('datafeeds.shareasale.com')
-    ftp.login('username','password')
-    ftp_list = ftp.nlst()
+	def convert(file_name):
+	    with codecs.open(file_name, 'r' , encoding='utf-8', errors='ignore') as f:
+	        data = pd.read_csv(f, sep="|", header=None)
+	        new_file = file_name.replace(".txt",".csv")
+	        data.to_csv(new_file)
+
+	    return new_file
+
+	# connect to ftp
+	ftp = FTP('datafeeds.shareasale.com')
+	ftp.login('username','password')
+	ftp_list = ftp.nlst()
+	csv_file_list = []
+
+	for f in ftp_list:
+		if f.isdigit():
+			ftp.cwd(f)
+			for file in ftp.nlst():
+				if file.endswith(".txt"):
+					downloadfile(file)
+					csv_file_list.append(convert(file))
+					os.remove(file)
+			ftp.cwd('../')
+     
+	return csv_file_list           
     
-    alist=[]
-    blist=[]
-    #get all folders bh
- 
-    for file in ftp_list:
-        if file.endswith(".txt"):
-            blist.append(file)
-        else:
-            alist.append(file)
+def saveToJson(product):
+    with open('products.json', 'a') as f:
+        json.dump(product, f, indent=4, sort_keys=True)
+    print('save to json')
     
-    for merchant in alist:
-        if merchant.isdigit():
-            eachpath='/'+merchant+'/'
-            for each in ftp.cwd(eachpath):
-                downloadfile(merchant+'.txt')
-               
-    ftp.quit()              
-    
-ftp_shareasale_download()
+file_list=ftp_download()
+
+product_dict_list = []       
 
 #DATA cleansing
-def clean(product):
-    #combine colunms after description
-    for column in product.iloc[:,12:len(product)]:
-        product[11]+=product[column].astype(str)
-        
-    d=product.drop(product.iloc[:,13:len(product)].columns, axis=1)
-    d['category']=product[9].str.cat(product[10],sep='1908418')
-    d['source']='shareAsale'
-    d.columns=["product_id","product_name","brand_id","brand","product_link","product_image",
-                     "big_img","price","retailer_price","m_category","subcategory","description","merch","category","source"]
-    d['product_link'].replace('YOURUSERID','1908418')
-    d['product_link'] = set(map(lambda x: x.replace("YOURUSERID","1908418"), d['product_link']))
-    res=d.drop(['product_id','big_img','m_category','subcategory'],axis=1)
+def clean():  
     
-    res['color']=np.nan
-    res['material']=np.nan
-    res['size']=np.nan
-    res.dropna(axis=1, how='all')
-    return res
+    for file in file_list:
+    	with open(file) as csvfile:
+            reader = csv.DictReader(csvfile)
+       
+            for row in reader:
+                for col in range(12, 50):
+                    row['11']+=row[str(col)]
+                row['4']=row['4'].replace("YOURUSERID","1908418"),
+                product_dict={
+                'type':'add',
+                'id':row['0'],
+                'fields':{
+        	           'title': row['1'],
+        	           'brand': row['3'],
+        	           'product_url': row['4'],
+        	           'img_url': row['5'],
+        	           'price': row['7'],
+                   'description': row['11'],
+        	           'color': ' ',
+        	           'material': ' ',
+        	           'size': ' ',
+        	           'merch_id': row['2'],
+        	           'merchant_name': row['3'],
+        	           'source': 'ShareASale'
+            	           }
+            	    	}
+                product_dict_list.append(product_dict)
+           
+    return product_dict_list
 
 
-#process txt file
-#on my local 
-
-filelist=[]
-
-for files in os.listdir(path):
-    if files.endswith('.txt'):
-        filelist.append(files)
-
-csvlist=[]
-for i in filelist:
-    filepath=path+i
-    with codecs.open(filepath, 'r' , encoding='utf-8', errors='ignore') as f:
-        data=pd.read_csv(f, sep="|", header=None)
-        test=clean(data)
-        test.to_csv(path+i.replace(".txt",".csv"))
-        csvlist.append(test)
-
-#convert to json
-
-for file in glob.glob('path/*.csv'):
-    csvf=os.path.splitext(file)[0]
-    jsonfile= csvf +'.json'
+'''        
+# upload to couldsearch    
+def upload_to_cloudsearch(products_json):
+    # turn json to bytes
+    products_bytes = products_json.encode('utf-8')
+    # establish link and upload
+    client = boto3.client('cloudsearchdomain',endpoint_url = 'http://doc-frenzysearch-g2cbqftgpmzftr7am5fvng5sz4.us-west-1.cloudsearch.amazonaws.com')
+    response = client.upload_documents(
+                documents= products_bytes,
+                contentType='application/json')
+'''        
     
-    with open (csvf +'.csv') as f:
-        reader=csv.DictReader(f)
-        rows = list(reader)
-        
-    with open (jsonfile, 'w') as f:
-        json.dump(rows, f, indent=4, sort_keys=True)
+#start to chuck file and upload
+ 
+product_queue = collections.deque()
+product_queue.extend(clean())
 
-#delete txt and csv file
+batch_size = 4000
+
+
+while len(product_queue) > batch_size:
+    print('queue length', len(product_queue))
+    seq = [product_queue.popleft() for _ in range(batch_size)]
+    products_json = json.dumps(seq)
+    saveToJson(seq)
+    #upload_to_cloudsearch(products_json)
+
+# if the product queue still contains products, upload one more time
+if len(product_queue) >= 0:
+    print('the last batch')
+    products_json = json.dumps(list(product_queue))
+    saveToJson(list(product_queue))
+    #upload_to_cloudsearch(products_json)
+    
+
+#delete everything local
 filelist = [ f for f in os.listdir(path) if f.endswith(".csv") or f.endswith('.txt')]
 for f in filelist:
-    os.remove(os.path.join(path, f))
+    os.remove(os.path.join(path, f))        
+
