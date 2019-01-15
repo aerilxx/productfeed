@@ -195,7 +195,7 @@ def update(file, file_map):
                 'fields':{
         	           'title': row['1'],
         	           'brand': row['3'],
-        	           'product_url': row['4'].replace("YOURUSERID","1908418"),
+        	           'product_url': row['4'].replace("YOURUSERID","xxxxxx"),
         	           'img_url': row['5'],
         	           'price': row['7'],
         	           'category': row['9']+row['10'],
@@ -242,7 +242,7 @@ def upload_to_cloudsearch(products_json):
     # turn json to bytes
     products_bytes = products_json.encode('utf-8').strip()
     # establish link and upload
-    client = boto3.client('cloudsearchdomain',endpoint_url = 'http://doc-test-frenzy-search-bjus6b5jv5bmi3cnrb3fqz2jc4.us-west-1.cloudsearch.amazonaws.com')
+    client = boto3.client('cloudsearchdomain',endpoint_url = 'aws')
     client.upload_documents(documents= products_bytes,contentType='application/json')
     print ("upload successful")
   
@@ -277,7 +277,7 @@ def deletelocal():
 
 if __name__ == '__main__':
     ftp = FTP('datafeeds.shareasale.com')
-    ftp.login('frenzylabs','frenzy2018') 
+    ftp.login('username','password') 
     file_list=ftp_download(ftp)
     
     # run the first time
@@ -301,7 +301,6 @@ if __name__ == '__main__':
     product_queue_update.extend(clean(new_file_list))
     uploadfile(product_queue_update) 
     for file in new_file_list:
-        os.remove(file)
         os.rename(file, file.replace("new.csv",".csv"))
     	
     deletelocal()
