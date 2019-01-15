@@ -8,7 +8,7 @@ import boto3
 import re
 import uuid
 
-perpperjam_api='248d610bc9497fe8c7cfa5247c1f337b96144f3baf408173eddb347ecc27a4a7'
+perpperjam_api='xxx'
 
 def getRequest(resource, params):
     #print ('downloading '+str(resource))
@@ -173,7 +173,7 @@ def update(new_products, old_products):
     
     for product in new_products:
         pid=new_products['sku']
-        client = boto3.client('cloudsearchdomain', endpoint_url = 'http://doc-test-frenzy-search-bjus6b5jv5bmi3cnrb3fqz2jc4.us-west-1.cloudsearch.amazonaws.com')
+        client = boto3.client('cloudsearchdomain', endpoint_url = 'xxx.amazonaws.com')
         response = client.search(query='pid:'+ str(pid),
                                  queryParser='lucene',
                                  size=20)
@@ -190,8 +190,7 @@ def update(new_products, old_products):
 if __name__ == '__main__': 
     #first run
     advertisers=getAdvertisers()
-    #['4595', '6152', '6291', '6301', '6309', '6819','6955', '7047', '7081', '7297', '7363', '7372', '7386', '7472', '7559', '7582', '7716', '7726', '7753', '7800', '7804', '7908', '8059', '8064', '8106', '8153', '8159', '8187', '8190', '8222', '8279', '8342', '8344', '8345', '8367', '8370', '8381', '8427', '8464', '8466', '8521', '8539', '8585', '8595', '8631', '8654', '8666', '8680', '8714', '8743', '8827', '8835', '8859', '8881', '8975', '8988', '8994', '9026', '9027', '9031', '9039', '9062', '9089', '9091', '9094', '9126', '9141', '9145', '9179', '9180', '9190', '9231', '9236', '9239', '9242', '9256', '9257', '9273', '9301', '9312']    
-    
+
     product_queue = collections.deque()
     product_queue.extend(getProducts(advertisers))
     upload(product_queue)
