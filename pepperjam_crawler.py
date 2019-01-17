@@ -1,14 +1,20 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+Created on Thu Jan  3 16:51:10 2019
 
+@author: bingqingxie
+"""
 
 import requests
 import json
-import collections
 import boto3
 import re
 import uuid
+from multiprocessing.pool import ThreadPool
+from botocore.client import Config
 
-perpperjam_api='xxx'
+perpperjam_api='private_api'
 
 def getRequest(resource, params):
     #print ('downloading '+str(resource))
@@ -20,7 +26,7 @@ def getRequest(resource, params):
     data = json.loads(r.text)
     return data
 
-# retrieve advertisers ID
+# retrieve joined advertisers ID
 def getAdvertisers():    
     advertiser_ids = []
     advertisers = getRequest('publisher/advertiser',{'format':'json','status':'joined'})
@@ -30,10 +36,10 @@ def getAdvertisers():
         
     return advertiser_ids
 
-def clean(products):
-    
+def clean(products):    
     product_dict_list = []
     for product in products:
+        # provent product_id upload error
          pattern = re.compile("[a-zA-Z0-9\-\_\/\#\:\.\;\&\=\?\@\$\+\!\*'\(\)\,\%]+$")
          if pattern.match(product['sku']):
             product_id = product['sku']
@@ -75,7 +81,7 @@ def getProductsByPage(program,pageNo):
 def getProducts(brands):
     product_dict_list=[]
     for brand in brands :
-
+        #get request must be in str not int
         products = getRequest('publisher/creative/product',{'format':'json','programIds': str(brand)})
      
         if 'pagination' in products['meta']:
@@ -97,7 +103,7 @@ def upload_to_cloudsearch(products_json):
     # turn json to bytes 
     products_bytes = products_json.encode('utf-8').strip()
     # establish link and upload
-    client = boto3.client('cloudsearchdomain',endpoint_url = 'http://doc-test-frenzy-search-bjus6b5jv5bmi3cnrb3fqz2jc4.us-west-1.cloudsearch.amazonaws.com')
+    client = boto3.client('cloudsearchdomain',endpoint_url = 'aws)
     client.upload_documents(documents= products_bytes,contentType='application/json')
  
 
@@ -105,103 +111,36 @@ def saveToJson(product):
     with open('pepperjam_products.json', 'a') as f:
 	    json.dump(product, f, indent=4, sort_keys=True)   
     print('saved to json')	
+
+def upload_test (p_list):
+    products_json = json.dumps(p_list)
+    saveToJson(p_list)
+    upload_to_cloudsearch(products_json)
+    print ('uploading')
+    
+# Yield successive n-sized 
+# chunks from l. 
+def divide_chunks(l, n): 
+    # looping till length l 
+    for i in range(0, len(l), n):  
+        yield l[i:i + n] 
         
-
-def upload(product_queue):
-    batch_size=4000
-    
-    while len(product_queue) > batch_size:
-        print('queue length', len(product_queue))
-        seq = [product_queue.popleft() for _ in range(batch_size)]
-        products_json = json.dumps(seq)
-        saveToJson(seq)
-        upload_to_cloudsearch(products_json)
-        print ('uploading')
-
-# if the product queue still contains products, upload one more time
-    if len(product_queue) >= 0:
-        print('the last batch')
-        products_json = json.dumps(list(product_queue))
-        saveToJson(list(product_queue))
-        upload_to_cloudsearch(products_json)
-        print ('the last batch uploadede')
-    
-#update
-#get new joined merchadise 
-def getNewAdvertiser():
-    new=[]
-    old_adv=['4595', '6152', '6291', '6301', '6309', '6819', '6955', '7047', '7081', '7297', '7363', '7372', '7386', '7472', '7559', '7582', '7716', '7726', '7753', '7800', '7804', '7908', '8059', '8064', '8106', '8153', '8159', '8187', '8190', '8222', '8279', '8342', '8344', '8345', '8367', '8370', '8381', '8427', '8464', '8466', '8521', '8539', '8585', '8595', '8631', '8654', '8666', '8680', '8714', '8743', '8827', '8835', '8859', '8881', '8975', '8988', '8994', '9026', '9027', '9031', '9039', '9062', '9089', '9091', '9094', '9126', '9141', '9145', '9179', '9180', '9190', '9231', '9236', '9239', '9242', '9256', '9257', '9273', '9301', '9312']
-    new_adv=getAdvertisers()
-    file = ''
-    if file in new_adv and file not in old_adv:
-        new.append(file)
-    return new
-
-'''
-#compare new download products with cloudsearch products
-def update(new_products, old_products):
-    
-    product_dict_list = []
-    
-    def delete(pid):     
-        product_dict = {'type': 'delete', 'id': pid }
-            
-        return product_dict
-    
-    def add(pid):
-        product_dict = {
-            'type': 'add',
-            'id': pid,
-            'fields':{
-                'title': product['name'],
-                'brand': product['manufacturer'],
-                'product_url': product['buy_url'],
-                'img_url': product['image_url'],
-                'price': product['price'],
-                'description': product['description_long'],
-                'category': product['category_program'],
-                'color': product['color'],
-                'material': product['material'],
-                'size': product['size'],
-                'merch_id': product['program_id'],
-                'merchant_name': product['program_name'],
-                'source': 'Pepperjam'
-                }
-            }
-        
-        return product_dict
-    
-    for product in new_products:
-        pid=new_products['sku']
-        client = boto3.client('cloudsearchdomain', endpoint_url = 'xxx.amazonaws.com')
-        response = client.search(query='pid:'+ str(pid),
-                                 queryParser='lucene',
-                                 size=20)
-        if response['hits']['found'] == 0:
-            product_dict_list.append(add(pid))
-        else:
-            product_dict_list.append(delete(pid))
-                   
-    return product_dict_list
-'''
-
-   
-
 if __name__ == '__main__': 
-    #first run
-    advertisers=getAdvertisers()
+#first run
+    all_products=getAdvertisers()
 
-    product_queue = collections.deque()
-    product_queue.extend(getProducts(advertisers))
-    upload(product_queue)
-    print ('pepperjam done...')
-    '''
-    #second run
-    advertisers= getNewAdvertiser()
-    product_queue = collections.deque()
-    product_queue.extend(getProducts(advertisers))
-    upload(product_queue)
-    print ('pepperjam update done...')
-    '''
+    product_list=[]
+#use extend instead of append to get all
+    product_list.extend(getProducts(all_products))
+    
+    # using list comprehension, devide all products into 4000 each
+    n = 4000
+    final = divide_chunks(product_list, n)
+    
+# set retries to avoid timeout 
+    config = Config(connect_timeout=10, retries={'max_attempts': 0})
+    pool= ThreadPool(processes=3)
+    pool.map(upload_test, final)
+    print('done')
         
         
