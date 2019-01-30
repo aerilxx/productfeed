@@ -18,7 +18,7 @@ import os
 app = Flask(__name__)
 app.config["DEBUG"] = True
 app.config.from_object(__name__)
-app.config['SECRET_KEY'] = 'frenzy2018datafeedsearchengine'
+app.config['SECRET_KEY'] = '****'
 
 def Wrap(feed, url, subid):
 	new_link = ' '
@@ -49,7 +49,7 @@ def Wrap(feed, url, subid):
 def searchproducts(brand, category, subid):
 
 	client = boto3.client('cloudsearchdomain',
-	endpoint_url = 'http://search-test-frenzy-search-bjus6b5jv5bmi3cnrb3fqz2jc4.us-west-1.cloudsearch.amazonaws.com')
+	        endpoint_url = '***')
 	###  change request content
 	request = "(and brand:'brandname' category:'categoryname')"
 	request = request.replace("brandname",brand).replace("categoryname",category)
@@ -105,6 +105,6 @@ def api_upload():
 
 
 if __name__ == '__main__':
-     app.run(port='5002')
+     app.run(port='****')
 
 
