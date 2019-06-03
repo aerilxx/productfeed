@@ -12,10 +12,11 @@ def upload(chuck):
 	config = Config(connect_timeout=70)
 	products_bytes = chuck.encode('utf-8')
 	try:
-		client = boto3.client('cloudsearchdomain',endpoint_url = 'http://doc-test-frenzy-search-bjus6b5jv5bmi3cnrb3fqz2jc4.us-west-1.cloudsearch.amazonaws.com',config=config)
+		client = boto3.client('cloudsearchdomain',endpoint_url = 'cloudsearc_document_url',config=config)
 		response = client.upload_documents(documents= products_bytes,contentType='application/json')
+		print(str(response['status']))
 	except botocore.errorfactory.DocumentServiceException:
 		print ('ignore document error..')
 		
-	return str(response['status'])
+	return "done"
     
