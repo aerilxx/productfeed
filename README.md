@@ -14,3 +14,16 @@ depper search: supply detail information of the products.
   http://ec2-54-153-21-98.us-west-1.compute.amazonaws.com:5002/products/mysearch?brand=<>&category=<>&color=<>&desc=<>&subid=123
   
   return most up-to-date products info
+
+for update function, run celery parallel uploading & uploading:
+download : celery -A shareAsale worker --loglevel=debug
+           celery -A cj_celery worker --loglevel=debug
+           celery -A rakuten_celery worker --loglevel=debug
+          
+run main function to call celery workers
+
+upload : celery -A upload_task worker --loglevel=debug
+run main: python upload_start.py
+
+worker monitor: celery -A upload_task flower --port=5555
+check work failure:      http://localhost:5555/broker
